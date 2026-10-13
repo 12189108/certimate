@@ -6,6 +6,16 @@ let pb: PocketBase;
 export const getPocketBase = () => {
   if (pb) return pb;
   pb = new PocketBase(getBasePath());
+  pb.beforeSend = (url, options) => {
+    // 移除 SDK 默认的语言请求头，让浏览器按自身语言偏好生成。
+    const headers = options.headers ?? {};
+    for (const name of Object.keys(headers)) {
+      if (name.toLowerCase() === "accept-language") {
+        delete headers[name];
+      }
+    }
+    return { url, options };
+  };
   pb.afterSend = (res, data) => {
     if ((res.status === 401 || res.status === 403) && pb.authStore?.isValid) {
       pb.authStore.clear();
